@@ -1,0 +1,89 @@
+{
+  "info": {
+    "name": "BeForma Food Vision API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Foods",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/foods?limit=20"
+      }
+    },
+    {
+      "name": "Analyze Meal Image",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/analyze-meal-image",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image",
+              "type": "file",
+              "src": "plate.jpg"
+            },
+            {
+              "key": "daily_calorie_target",
+              "type": "text",
+              "value": "2200"
+            },
+            {
+              "key": "calories_consumed_so_far",
+              "type": "text",
+              "value": "900"
+            },
+            {
+              "key": "goal",
+              "type": "text",
+              "value": "maintain"
+            },
+            {
+              "key": "dietary_preference",
+              "type": "text",
+              "value": "normal"
+            },
+            {
+              "key": "portion_scale",
+              "type": "text",
+              "value": "medium"
+            },
+            {
+              "key": "food_hints",
+              "type": "text",
+              "value": "chicken, rice, salad"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Model Status",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/model/status"
+      }
+    },
+    {
+      "name": "Reload Model",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/model/reload"
+      }
+    }
+  ]
+}

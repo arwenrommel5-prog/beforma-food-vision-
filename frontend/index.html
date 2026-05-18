@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BeForma Food Vision Tester</title>
+  <style>
+    :root{--bg:#07111f;--card:#111c2e;--muted:#9fb1c8;--text:#f6f8fb;--line:#22324b;--accent:#4f8cff;--good:#34d399;--bad:#fb7185;--warn:#fbbf24}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(135deg,#07111f,#101d33);color:var(--text)}
+    .wrap{max-width:1180px;margin:0 auto;padding:28px}.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch}.card{background:rgba(17,28,46,.92);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+    h1{margin:0 0 10px;font-size:34px}.sub{color:var(--muted);line-height:1.6}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}label{font-size:13px;color:#bfd0e7}input,select,textarea{width:100%;background:#0b1526;border:1px solid #2b3b55;border-radius:12px;padding:11px;color:var(--text);outline:none}input[type=file]{padding:9px}button{border:0;background:var(--accent);color:white;border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer}button.secondary{background:#1f2d45}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.pill{padding:7px 10px;border-radius:999px;background:#0b1526;border:1px solid var(--line);color:var(--muted);font-size:13px}.results{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:16px}.food{display:grid;grid-template-columns:86px 1fr;gap:12px;padding:12px;border:1px solid var(--line);border-radius:16px;background:#0b1526;margin-bottom:10px}.food img{width:86px;height:72px;object-fit:cover;border-radius:12px}.muted{color:var(--muted)}.big{font-size:30px;font-weight:800}.status.good{color:var(--good)}.status.over{color:var(--bad)}.status.under{color:var(--warn)}pre{white-space:pre-wrap;background:#06101f;border:1px solid var(--line);padding:12px;border-radius:14px;max-height:360px;overflow:auto}.preview{width:100%;max-height:280px;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#0b1526}.warn{border-left:4px solid var(--warn);padding:10px 12px;background:#0b1526;border-radius:10px;color:#fde68a;margin-top:12px}
+    @media(max-width:900px){.hero,.results{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="card">
+        <div class="row"><span class="pill">Standalone Microservice</span><span class="pill">Meal Image → Calories</span></div>
+        <h1>BeForma Food Vision Tester</h1>
+        <p class="sub">Upload a plate image, estimate foods/calories, compare the meal with the daily calorie target from the main BeForma nutrition model, then get better food suggestions.</p>
+        <div class="warn">Demo mode note: before training a real model, use <b>food hints</b> like: chicken, rice, salad. After training, hints become optional.</div>
+      </div>
+      <div class="card">
+        <img id="preview" class="preview" alt="Image preview" />
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div class="grid">
+        <div class="field"><label>API Base URL</label><input id="apiBase" value="http://127.0.0.1:8000" /></div>
+        <div class="field"><label>Daily calorie target</label><input id="daily" type="number" value="2200" /></div>
+        <div class="field"><label>Calories consumed so far</label><input id="consumed" type="number" value="900" /></div>
+        <div class="field"><label>Goal</label><select id="goal"><option>lose</option><option selected>maintain</option><option>gain</option></select></div>
+        <div class="field"><label>Dietary preference</label><select id="diet"><option>normal</option><option>vegan</option><option>vegetarian</option><option>pescatarian</option><option>dairy_free</option><option>gluten_free</option></select></div>
+        <div class="field"><label>Portion scale</label><select id="scale"><option>small</option><option selected>medium</option><option>large</option></select></div>
+      </div>
+      <div class="field"><label>Food hints for demo mode, comma separated</label><input id="hints" placeholder="chicken, rice, salad" value="chicken, rice, salad" /></div>
+      <div class="field"><label>Plate image</label><input id="image" type="file" accept="image/*" /></div>
+      <div class="row"><button onclick="checkApi()">Check API</button><button onclick="analyze()">Analyze Meal Image</button><button class="secondary" onclick="loadFoods()">Show Food DB</button></div>
+    </div>
+
+    <div id="summary" class="results"></div>
+    <div id="foods"></div>
+    <div class="card" style="margin-top:18px"><h3>Raw Response</h3><pre id="raw">No response yet.</pre></div>
+  </div>
+<script>
+const $ = id => document.getElementById(id);
+$('image').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(file) $('preview').src = URL.createObjectURL(file);
+});
+async function checkApi(){
+  const r = await fetch($('apiBase').value + '/health');
+  const j = await r.json(); $('raw').textContent = JSON.stringify(j,null,2);
+}
+function foodCard(f){return `<div class="food"><img src="${f.image}"><div><b>${f.name_en}</b><div class="muted">${f.name_ar} • ${f.estimated_quantity_g||f.typical_serving_g||''}g</div><div>${f.calories||f.calories_per_100g} kcal ${f.protein?`• P ${f.protein}g`:''} ${f.carbs?`• C ${f.carbs}g`:''} ${f.fat?`• F ${f.fat}g`:''}</div><div class="muted">${f.category||''} ${f.confidence?`• confidence ${Math.round(f.confidence*100)}%`:''}</div></div></div>`}
+async function analyze(){
+  const file = $('image').files[0]; if(!file){alert('Upload an image first'); return;}
+  const fd = new FormData();
+  fd.append('image', file); fd.append('daily_calorie_target', $('daily').value); fd.append('calories_consumed_so_far', $('consumed').value);
+  fd.append('goal', $('goal').value); fd.append('dietary_preference', $('diet').value); fd.append('portion_scale', $('scale').value); fd.append('food_hints', $('hints').value);
+  const r = await fetch($('apiBase').value + '/analyze-meal-image', {method:'POST', body:fd});
+  const j = await r.json(); $('raw').textContent = JSON.stringify(j,null,2);
+  if(!r.ok){ $('summary').innerHTML = `<div class="card"><h3>Error</h3><pre>${JSON.stringify(j,null,2)}</pre></div>`; return; }
+  const c = j.daily_comparison;
+  $('summary').innerHTML = `<div class="card"><h3>Meal Result</h3><div class="big">${j.meal_totals.calories} kcal</div><p class="status ${c.status}">${c.message_ar}</p><div class="row"><span class="pill">Protein ${j.meal_totals.protein}g</span><span class="pill">Carbs ${j.meal_totals.carbs}g</span><span class="pill">Fat ${j.meal_totals.fat}g</span></div><p class="muted">Remaining after meal: ${c.remaining_after_meal} kcal</p></div>`+
+  `<div class="card"><h3>Recognized Foods</h3>${j.recognized_foods.map(foodCard).join('')}</div>`+
+  `<div class="card"><h3>Better Options</h3><p>${j.recommendations.action_ar}</p>${j.recommendations.better_foods.map(foodCard).join('')}</div>`+
+  `<div class="card"><h3>Warnings</h3>${j.warnings.map(w=>`<p class="muted">• ${w}</p>`).join('')}</div>`;
+}
+async function loadFoods(){
+  const r = await fetch($('apiBase').value + '/foods?limit=80'); const j = await r.json();
+  $('foods').innerHTML = `<div class="card" style="margin-top:18px"><h3>Food Database</h3><div class="results">${j.items.map(foodCard).join('')}</div></div>`;
+}
+</script>
+</body>
+</html>
