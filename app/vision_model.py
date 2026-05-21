@@ -112,7 +112,9 @@ class FoodVisionModel:
         x = preprocess(img).unsqueeze(0)
         with torch.no_grad():
             probs = torch.softmax(model(x)[0], dim=0)
-        top = torch.topk(probs, k=min(5, len(self.classes)))
+        # Single-image classifier: use only the top prediction for meal calories.
+        # Other classes are alternative guesses, not extra detected foods.
+        top = torch.topk(probs, k=1)
         results = []
         for p, idx in zip(top.values.tolist(), top.indices.tolist()):
             cls = self.classes[idx]
