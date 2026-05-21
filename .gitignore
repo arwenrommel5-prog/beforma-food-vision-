@@ -1,4 +1,12 @@
 __pycache__/
 *.pyc
 app/__pycache__/
+sample_uploads/__pycache__/
+*.pyc
+app/__pycache__/
 sample_uploads/
+
+data_v2/
+models_v2/
+*.ckpt
+*.pth
