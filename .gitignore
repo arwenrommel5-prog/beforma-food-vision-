@@ -9,4 +9,14 @@ sample_uploads/
 data_v2/
 models_v2/
 *.ckpt
+*.pthdata_v2/
+models_v2/
+*.ckpt
 *.pth
+*.safetensors
+__pycache__/
+*.pyc
+app/__pycache__/
+sample_uploads/
+beforma_v2_multitask_files/
+.gitignore.append
